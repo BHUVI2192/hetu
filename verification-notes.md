@@ -8,3 +8,11 @@
 - Clicking Analyze trace transitions into the debugger without a route error.
 - Debugger presents the execution graph, selected DES node data-002, stats strip, tabs (Report, Evidence, Propagation, Decisions, Checklist, Export), evidence cards, and recommended action content.
 - Browser inspection confirmed causal report copy and evidence references are visible in the rendered page.
+
+## Reference alignment verification
+
+The live reference was inspected at https://404-ai.cofounder.company/. Its key visual tokens are a pale lavender canvas, #6e4aff violet accent, #0a0a0a near-black text, #e5e5e5 rules, JetBrains Mono/Inter typography, uppercase mono labels, sparse centered hero, stat bands, trace evidence cards, workflow steps, replay section, and evidence-first CTA. The updated landing now follows that structure and copy closely while preserving the debugger transition.
+
+The updated local preview visually matches the reference composition: compact technical nav, large centered mono headline, violet CTA, lavender background, sparse stat rail, trace diagnosis card, workflow grid, replay module, evidence panel, and final CTA.
+
+The updated landing's Start using 404 AI CTA was exercised in the browser and correctly transitioned to the existing debugger. The debugger retained the DES report, causal graph, evidence cards, and analysis tabs after the redesign.
