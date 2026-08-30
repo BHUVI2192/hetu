@@ -87,3 +87,63 @@ export const evaluations = mysqlTable("evaluations", {
 
 export type Evaluation = typeof evaluations.$inferSelect;
 export type InsertEvaluation = typeof evaluations.$inferInsert;
+
+export const snapshots = mysqlTable("snapshots", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  executionId: int("executionId").notNull(),
+  name: varchar("name", { length: 160 }).notNull(),
+  stepId: varchar("stepId", { length: 120 }).notNull(),
+  state: text("state").notNull(),
+  metadata: text("metadata").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Snapshot = typeof snapshots.$inferSelect;
+export type InsertSnapshot = typeof snapshots.$inferInsert;
+
+export const replays = mysqlTable("replays", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  executionId: int("executionId").notNull(),
+  snapshotId: int("snapshotId"),
+  mode: mysqlEnum("mode", ["sandbox", "mock_tools", "recorded_tools", "read_only"]).default("sandbox").notNull(),
+  status: mysqlEnum("status", ["queued", "running", "completed", "failed"]).default("queued").notNull(),
+  overrides: text("overrides").notNull(),
+  result: text("result"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Replay = typeof replays.$inferSelect;
+export type InsertReplay = typeof replays.$inferInsert;
+
+export const forks = mysqlTable("forks", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  executionId: int("executionId").notNull(),
+  snapshotId: int("snapshotId"),
+  name: varchar("name", { length: 160 }).notNull(),
+  changes: text("changes").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Fork = typeof forks.$inferSelect;
+export type InsertFork = typeof forks.$inferInsert;
+
+export const evaluationRuns = mysqlTable("evaluationRuns", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  evaluationId: int("evaluationId").notNull(),
+  executionId: int("executionId").notNull(),
+  score: int("score").notNull(),
+  quality: int("quality").notNull(),
+  groundedness: int("groundedness").notNull(),
+  trajectory: int("trajectory").notNull(),
+  latency: int("latency").notNull(),
+  cost: int("cost").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EvaluationRun = typeof evaluationRuns.$inferSelect;
+export type InsertEvaluationRun = typeof evaluationRuns.$inferInsert;

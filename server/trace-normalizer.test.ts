@@ -16,10 +16,25 @@ describe("trace normalization", () => {
     expect(trace.events.map((event) => event.type)).toEqual(["AGENT_START", "TOOL_RESULT"]);
   });
 
-  it("detects CrewAI and converts line logs into structured events", () => {
-    const trace = normalizeTrace("crewai task_started planner\ncrew tool_call search\ncrew error timeout");
-    expect(detectFramework(trace.framework, trace)).toBe("crewai");
-    expect(trace.events).toHaveLength(3);
+  it("detects LangGraph and preserves state plus parent relationships", () => {
+    const trace = normalizeTrace(JSON.stringify({ framework: "langgraph", run_id: "graph-1", events: [{ id: "node-1", event: "state_change", node: "planner", values: { route: "retrieve" } }, { id: "node-2", event: "tool_call", node: "retriever", parent_id: "node-1" }] }));
+    expect(trace.framework).toBe("langgraph");
+    expect(trace.events[0]?.metadata.adapter).toBe("langgraph");
+    expect(trace.events[0]?.metadata.state).toContain("retrieve");
+    expect(trace.events[1]?.parentId).toBe("node-1");
+  });
+
+  it("detects CrewAI and keeps crew lineage metadata", () => {
+    const trace = normalizeTrace(JSON.stringify({ crewai: true, events: [{ id: "task-1", event: "agent_started", agent: "researcher", crew_id: "crew-1", task_id: "task-1" }, { id: "task-2", event: "task_started", agent: "writer", crew_id: "crew-1", task_id: "task-2" }] }));
+    expect(trace.framework).toBe("crewai");
+    expect(trace.events).toHaveLength(2);
+    expect(trace.events[1]?.parentId).toBe("crew-1");
+    expect(trace.events[0]?.metadata.adapter).toBe("crewai");
+  });
+
+  it("converts plain-text logs into structured events", () => {
+    const trace = normalizeTrace("crew tool_call search\ncrew error timeout");
+    expect(trace.events).toHaveLength(2);
     expect(trace.summary.errors).toBe(1);
   });
 

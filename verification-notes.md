@@ -38,3 +38,7 @@ The workspace loads after the landing CTA with the new sidebar actions visible: 
 The workspace navigation now opens the Agent registry with a clean, brand-consistent screen. Because the preview session is unauthenticated, the registry correctly shows a sign-in gate rather than exposing or mutating persistent data.
 
 Evaluation lab navigation is working and renders a clean "Prove quality before deploy" screen with a secure sign-in gate in the unauthenticated preview session. This verifies the registry/evaluation workflows are reachable without exposing persistent workspace data.
+
+## Snapshot/replay verification
+
+The live workspace opens the Execution Explorer with clear copy describing state capture, replay, and fork workflows. The unauthenticated preview correctly shows a sign-in gate before any execution or snapshot data is exposed.

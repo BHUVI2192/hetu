@@ -44,9 +44,10 @@ function eventFromObject(item: Record<string, unknown>, index: number): Normaliz
   else if (/snapshot/.test(rawType)) type = "SNAPSHOT";
   else if (/input|user/.test(rawType)) type = "USER_INPUT";
   else if (/output|response/.test(rawType)) type = "AGENT_OUTPUT";
+  else if (/sub.?agent|child.?agent|delegate/.test(rawType)) type = "SUB_AGENT";
   const status = item.error || /error|fail/.test(rawType) ? "error" : item.status === "ok" || item.status === "success" ? "ok" : "unknown";
   const metadata = stringRecord(item) as Record<string, string | number | boolean | null>;
-  return { id: String(item.id ?? item.span_id ?? item.run_id ?? `evt_${index + 1}`), timestamp: text(item.timestamp ?? item.start_time ?? item.time), type, name, agent: text(item.agent ?? item.assistant ?? item.node ?? item.component), parentId: text(item.parent_id ?? item.parent_run_id ?? item.parentSpanId), status, input: bounded(text(item.input ?? item.inputs)), output: bounded(text(item.output ?? item.outputs ?? item.result)), metadata };
+  return { id: String(item.id ?? item.span_id ?? item.run_id ?? `evt_${index + 1}`), timestamp: text(item.timestamp ?? item.start_time ?? item.time), type, name, agent: text(item.agent ?? item.assistant ?? item.node ?? item.component), parentId: text(item.parent_id ?? item.parent_run_id ?? item.parentSpanId ?? item.crew_id), status, input: bounded(text(item.input ?? item.inputs)), output: bounded(text(item.output ?? item.outputs ?? item.result)), metadata };
 }
 
 function flatten(value: unknown): Record<string, unknown>[] {
@@ -73,8 +74,12 @@ export function normalizeTrace(raw: string): NormalizedTrace {
   let parsed: unknown;
   try { parsed = JSON.parse(trimmed); } catch { parsed = trimmed.split(/\r?\n/).filter(Boolean).map((line) => ({ name: line.slice(0, 100), event: /error|fail/i.test(line) ? "error" : /tool|query|retriev/i.test(line) ? "tool_call" : "custom_event", raw: line })); }
   const records = flatten(parsed);
-  const events = records.map(eventFromObject);
   const framework = detectFramework(raw, parsed);
+  const events = records.map(eventFromObject).map((event, index, all) => {
+    const metadata = { ...event.metadata, adapter: framework, state: event.metadata.state ?? event.metadata.checkpoint ?? event.metadata.values ?? null };
+    const parentId = event.parentId ?? (framework === "langgraph" && index > 0 ? all[index - 1]?.id : undefined);
+    return { ...event, parentId, metadata };
+  });
   const runId = String((records[0]?.run_id ?? records[0]?.trace_id ?? records[0]?.id ?? `run_${Date.now()}`));
   const agents = new Set(events.map((event) => event.agent).filter(Boolean)).size;
   const tools = events.filter((event) => event.type === "TOOL_CALL" || event.type === "TOOL_RESULT").length;

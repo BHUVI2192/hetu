@@ -15,6 +15,13 @@
       "when": 1788105970789,
       "tag": "0001_cold_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1788106471327,
+      "tag": "0002_magenta_triton",
+      "breakpoints": true
     }
   ]
 }
