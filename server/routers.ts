@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
-import { createAgent, createEvaluation, createEvaluationRun, createExecution, createExperiment, createFork, createReplay, createSnapshot, listAgents, listEvaluationRuns, listEvaluations, listExecutions, listExperiments, listReplays, listSnapshots } from "./db";
+import { createAgent, createEvaluation, createEvaluationRun, createExecution, createExperiment, createFork, createReplay, createSnapshot, getExecution, listAgents, listEvaluationRuns, listEvaluations, listExecutions, listExperiments, listReplays, listSnapshots, updateEvaluationScore } from "./db";
 import { normalizeTrace } from "./trace-normalizer";
 
 export const appRouter = router({
@@ -43,6 +43,22 @@ export const appRouter = router({
     createReplay: protectedProcedure.input(z.object({ executionId: z.number().int().positive(), snapshotId: z.number().int().positive().optional(), mode: z.enum(["sandbox", "mock_tools", "recorded_tools", "read_only"]), overrides: z.record(z.string(), z.unknown()).default({}) })).mutation(({ ctx, input }) => createReplay({ userId: ctx.user.id, executionId: input.executionId, snapshotId: input.snapshotId, mode: input.mode, overrides: JSON.stringify(input.overrides) })),
     createFork: protectedProcedure.input(z.object({ executionId: z.number().int().positive(), snapshotId: z.number().int().positive().optional(), name: z.string().min(2).max(160), changes: z.record(z.string(), z.unknown()).default({}) })).mutation(({ ctx, input }) => createFork({ userId: ctx.user.id, executionId: input.executionId, snapshotId: input.snapshotId, name: input.name, changes: JSON.stringify(input.changes) })),
     evaluationRuns: protectedProcedure.input(z.object({ evaluationId: z.number().int().positive() })).query(({ ctx, input }) => listEvaluationRuns(ctx.user.id, input.evaluationId)),
+    runEvaluation: protectedProcedure.input(z.object({ evaluationId: z.number().int().positive(), executionId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const execution = await getExecution(ctx.user.id, input.executionId);
+      if (!execution) throw new Error("Execution not found in this workspace");
+      const events = JSON.parse(execution.normalizedEvents) as Array<{ status?: string; type?: string }>;
+      const errors = events.filter((event) => event.status === "error").length;
+      const retries = events.filter((event) => event.type === "RETRY").length;
+      const quality = Math.max(35, 100 - errors * 15);
+      const groundedness = Math.max(35, 100 - errors * 12);
+      const trajectory = Math.max(35, 100 - retries * 12 - errors * 8);
+      const latency = Math.max(35, 100 - Math.min(60, execution.eventCount * 2));
+      const cost = Math.max(35, 100 - Math.min(60, execution.eventCount));
+      const score = Math.round((quality + groundedness + trajectory + latency + cost) / 5);
+      const run = await createEvaluationRun({ userId: ctx.user.id, evaluationId: input.evaluationId, executionId: input.executionId, score, quality, groundedness, trajectory, latency, cost, notes: `Derived from ${execution.eventCount} normalized events, ${errors} error signal(s), and ${retries} retry signal(s).` });
+      await updateEvaluationScore(ctx.user.id, input.evaluationId, score);
+      return run;
+    }),
     createEvaluationRun: protectedProcedure.input(z.object({ evaluationId: z.number().int().positive(), executionId: z.number().int().positive(), score: z.number().int().min(0).max(100), quality: z.number().int().min(0).max(100), groundedness: z.number().int().min(0).max(100), trajectory: z.number().int().min(0).max(100), latency: z.number().int().min(0).max(100), cost: z.number().int().min(0).max(100), notes: z.string().optional() })).mutation(({ ctx, input }) => createEvaluationRun({ userId: ctx.user.id, ...input })),
   }),
 });

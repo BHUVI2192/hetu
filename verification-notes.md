@@ -42,3 +42,7 @@ Evaluation lab navigation is working and renders a clean "Prove quality before d
 ## Snapshot/replay verification
 
 The live workspace opens the Execution Explorer with clear copy describing state capture, replay, and fork workflows. The unauthenticated preview correctly shows a sign-in gate before any execution or snapshot data is exposed.
+
+## Final workflow verification
+
+Live preview confirms the updated Execution Explorer and Evaluation Lab navigation render cleanly after the final backend scoring changes. Unauthenticated sessions are gated before persistent data access; authenticated sessions can use the stored workflows.

@@ -107,6 +107,13 @@ export async function listExecutions(userId: number) {
   return db ? db.select().from(executions).where(eq(executions.userId, userId)) : [] as Execution[];
 }
 
+export async function getExecution(userId: number, executionId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(executions).where(and(eq(executions.userId, userId), eq(executions.id, executionId))).limit(1);
+  return rows[0];
+}
+
 export async function createExecution(input: { userId: number; agentId?: number; externalId: string; framework: string; eventCount: number; rootCause?: string; normalizedEvents: string; metadata: string }) {
   const db = await getDb();
   if (!db) return { id: 0, ...input, status: "completed" as const };
@@ -186,4 +193,10 @@ export async function createEvaluationRun(input: { userId: number; evaluationId:
   await db.insert(evaluationRuns).values(input);
   const rows = await db.select().from(evaluationRuns).where(eq(evaluationRuns.userId, input.userId));
   return rows.at(-1);
+}
+
+export async function updateEvaluationScore(userId: number, evaluationId: number, score: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(evaluations).set({ score, status: "completed" }).where(and(eq(evaluations.userId, userId), eq(evaluations.id, evaluationId)));
 }
