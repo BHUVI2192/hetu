@@ -16,3 +16,11 @@ The live reference was inspected at https://404-ai.cofounder.company/. Its key v
 The updated local preview visually matches the reference composition: compact technical nav, large centered mono headline, violet CTA, lavender background, sparse stat rail, trace diagnosis card, workflow grid, replay module, evidence panel, and final CTA.
 
 The updated landing's Start using 404 AI CTA was exercised in the browser and correctly transitioned to the existing debugger. The debugger retained the DES report, causal graph, evidence cards, and analysis tabs after the redesign.
+
+## Workspace UX verification
+
+The landing page still renders the reference-aligned hero and all Start using CTAs are available. The next browser step is to enter the workspace and verify trace intake behavior.
+
+The new workspace rendered successfully after the landing CTA. Browser inspection confirmed the sidebar, workspace identity, trace textarea, format selector, upload control, analyze action, starter cards, and engineering loop are all present and legible.
+
+Pasted-trace browser test passed: a multi-line trace populated the textarea, retained visible input, and Analyze trace transitioned into the existing causal debugger with the selected DES node and evidence report intact.

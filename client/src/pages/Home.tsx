@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import ReferenceLanding from "./ReferenceLanding";
+import WorkspaceHome from "./WorkspaceHome";
 import {
   Activity,
   AlertTriangle,
@@ -304,7 +305,7 @@ function GraphCanvas({ scenario, selectedNode, onSelect }: { scenario: Scenario;
             return (
               <g key={node.id} className={`graph-node ${selected ? "selected" : ""}`} onClick={() => onSelect(node.id)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onSelect(node.id); }}>
                 {node.status === "des" && <rect x={node.x - 12} y={node.y - 44} width="126" height="88" rx="12" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.72" filter="url(#des-glow)" />}
-                <rect x={node.x} y={node.y - 32} width="110" height="64" rx="8" fill={node.status === "error" || node.status === "des" ? "#fff5f5" : node.status === "warn" ? "#fffbeb" : "#ffffff"} stroke={selected ? "#2563eb" : color} strokeWidth={selected ? 2.5 : 1.4} />
+                <rect x={node.x} y={node.y - 32} width="110" height="64" rx="8" fill={node.status === "error" || node.status === "des" ? "#fff5f5" : node.status === "warn" ? "#fffbeb" : "#ffffff"} stroke={selected ? "#6e4aff" : color} strokeWidth={selected ? 2.5 : 1.4} />
                 <circle cx={node.x + 15} cy={node.y - 14} r="4" fill={color} />
                 <text x={node.x + 26} y={node.y - 10} fontSize="10" fontWeight="700" fill="#111827">{node.label}</text>
                 <text x={node.x + 12} y={node.y + 10} fontSize="9.5" fill="#6b7280">{node.sub}</text>
@@ -381,11 +382,13 @@ function Debugger({ scenario, onBack, onScenarioChange }: { scenario: Scenario; 
 function MoreDots() { return <span className="more-dots"><i /><i /><i /></span>; }
 
 export default function Home() {
-  const [mode, setMode] = useState<"landing" | "debugger">("landing");
+  const [mode, setMode] = useState<"landing" | "workspace" | "debugger">("landing");
   const [scenarioKey, setScenarioKey] = useState<ScenarioKey>("cascading");
   const [trace, setTrace] = useState("");
   const scenario = scenarios[scenarioKey];
-  const analyze = () => { setMode("debugger"); };
-  if (mode === "debugger") return <Debugger scenario={scenario} onBack={() => setMode("landing")} onScenarioChange={setScenarioKey} />;
-  return <ReferenceLanding onStart={analyze} />;
+  const openWorkspace = () => { setMode("workspace"); };
+  const analyze = (input?: string) => { if (input) setTrace(input); setMode("debugger"); };
+  if (mode === "debugger") return <Debugger scenario={scenario} onBack={() => setMode("workspace")} onScenarioChange={setScenarioKey} />;
+  if (mode === "workspace") return <WorkspaceHome onBack={() => setMode("landing")} onAnalyze={analyze} />;
+  return <ReferenceLanding onStart={openWorkspace} />;
 }
