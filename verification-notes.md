@@ -24,3 +24,17 @@ The landing page still renders the reference-aligned hero and all Start using CT
 The new workspace rendered successfully after the landing CTA. Browser inspection confirmed the sidebar, workspace identity, trace textarea, format selector, upload control, analyze action, starter cards, and engineering loop are all present and legible.
 
 Pasted-trace browser test passed: a multi-line trace populated the textarea, retained visible input, and Analyze trace transitioned into the existing causal debugger with the selected DES node and evidence report intact.
+
+## Persistent workspace verification
+
+The redesigned landing still loads cleanly and exposes the primary Start using CTA. The next browser verification covers the new registry and evaluation navigation.
+
+## Registry and evaluation verification
+
+The workspace loads after the landing CTA with the new sidebar actions visible: Agents, Executions, RCA & evidence, Evaluations, and Deployments. Overview still renders its real trace intake and guided starters.
+
+## Full-stack module verification
+
+The workspace navigation now opens the Agent registry with a clean, brand-consistent screen. Because the preview session is unauthenticated, the registry correctly shows a sign-in gate rather than exposing or mutating persistent data.
+
+Evaluation lab navigation is working and renders a clean "Prove quality before deploy" screen with a secure sign-in gate in the unauthenticated preview session. This verifies the registry/evaluation workflows are reachable without exposing persistent workspace data.

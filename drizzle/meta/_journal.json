@@ -8,6 +8,13 @@
       "when": 1788101785909,
       "tag": "0000_condemned_manta",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1788105970789,
+      "tag": "0001_cold_wiccan",
+      "breakpoints": true
     }
   ]
 }

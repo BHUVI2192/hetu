@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import ReferenceLanding from "./ReferenceLanding";
 import WorkspaceHome from "./WorkspaceHome";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 import {
   Activity,
   AlertTriangle,
@@ -387,7 +389,10 @@ export default function Home() {
   const [trace, setTrace] = useState("");
   const scenario = scenarios[scenarioKey];
   const openWorkspace = () => { setMode("workspace"); };
-  const analyze = (input?: string) => { if (input) setTrace(input); setMode("debugger"); };
+  const { isAuthenticated } = useAuth();
+  const normalize = trpc.trace.normalize.useMutation();
+  const ingest = trpc.workspace.ingest.useMutation();
+  const analyze = (input?: string) => { if (input) { setTrace(input); normalize.mutate({ rawTrace: input }); if (isAuthenticated) ingest.mutate({ rawTrace: input }); } setMode("debugger"); };
   if (mode === "debugger") return <Debugger scenario={scenario} onBack={() => setMode("workspace")} onScenarioChange={setScenarioKey} />;
   if (mode === "workspace") return <WorkspaceHome onBack={() => setMode("landing")} onAnalyze={analyze} />;
   return <ReferenceLanding onStart={openWorkspace} />;

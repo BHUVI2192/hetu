@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { Agent, agents, Evaluation, evaluations, Execution, executions, Experiment, experiments, InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,54 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function listAgents(userId: number) {
+  const db = await getDb();
+  return db ? db.select().from(agents).where(eq(agents.userId, userId)) : [] as Agent[];
+}
+
+export async function createAgent(input: { userId: number; name: string; framework: string; config: string }) {
+  const db = await getDb();
+  if (!db) return { id: 0, ...input, version: "v1", status: "active" as const };
+  await db.insert(agents).values(input);
+  const rows = await db.select().from(agents).where(eq(agents.userId, input.userId));
+  return rows.at(-1);
+}
+
+export async function listExecutions(userId: number) {
+  const db = await getDb();
+  return db ? db.select().from(executions).where(eq(executions.userId, userId)) : [] as Execution[];
+}
+
+export async function createExecution(input: { userId: number; agentId?: number; externalId: string; framework: string; eventCount: number; rootCause?: string; normalizedEvents: string; metadata: string }) {
+  const db = await getDb();
+  if (!db) return { id: 0, ...input, status: "completed" as const };
+  await db.insert(executions).values(input);
+  const rows = await db.select().from(executions).where(eq(executions.userId, input.userId));
+  return rows.at(-1);
+}
+
+export async function listExperiments(userId: number) {
+  const db = await getDb();
+  return db ? db.select().from(experiments).where(eq(experiments.userId, userId)) : [] as Experiment[];
+}
+
+export async function createExperiment(input: { userId: number; agentId?: number; name: string; hypothesis: string; config: string }) {
+  const db = await getDb();
+  if (!db) return { id: 0, ...input, status: "draft" as const };
+  await db.insert(experiments).values(input);
+  const rows = await db.select().from(experiments).where(eq(experiments.userId, input.userId));
+  return rows.at(-1);
+}
+
+export async function listEvaluations(userId: number) {
+  const db = await getDb();
+  return db ? db.select().from(evaluations).where(eq(evaluations.userId, userId)) : [] as Evaluation[];
+}
+
+export async function createEvaluation(input: { userId: number; agentId?: number; executionId?: number; name: string; rubric: string; score?: number }) {
+  const db = await getDb();
+  if (!db) return { id: 0, ...input, status: "completed" as const };
+  await db.insert(evaluations).values(input);
+  const rows = await db.select().from(evaluations).where(eq(evaluations.userId, input.userId));
+  return rows.at(-1);
+}
