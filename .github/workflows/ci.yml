@@ -1,10 +1,19 @@
 name: CI
-on: {push: {branches: [main]}}
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: {node-version: 20}
-      - run: cd backend && npm ci && npx prisma generate && npm run build
+        with:
+          node-version: 20
+      - name: Build Backend
+        run: cd backend && npm ci && npx prisma generate && npm run build
+      - name: Build Frontend
+        run: cd frontend && npm ci && npm run build
