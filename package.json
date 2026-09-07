@@ -1,1 +1,16 @@
-{"name":"404ai","version":"1.0.0","private":true,"workspaces":["backend","frontend"]}
+{
+  "name": "hetu-ai",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start",
+    "dev:backend": "npm --prefix backend run start:dev",
+    "build:backend": "npm --prefix backend run build"
+  }
+}
