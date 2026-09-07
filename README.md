@@ -1,35 +1,73 @@
-# 404 AI — Causal Intelligence Platform
+# HETU.ai — Multi-Agent System Causal Debugger
 
-## Quick Start
+> **Trace the cause. Test the fix. Make multi-agent reasoning failures explainable.**
+
+HETU.ai is a specialized causal debugger and cognitive execution visualizer designed for multi-agent AI systems (LangGraph, CrewAI, AutoGen, and custom OpenTelemetry traces). Instead of scrolling through thousands of disconnected logs, HETU isolates the **Decisive Error Step (DES)**—the exact earliest point where an agent's reasoning went off track—and allows you to test counterfactual fixes.
+
+---
+
+## ⚡ Key Features
+
+- **Multi-Agent Cognitive Execution Graph (MACEG)**: Auto-constructs a interactive visual graph connecting agent handoffs, tool calls, and memory state mutations.
+- **Counterfactual Causal Traversal (CCT)**: Pinpoints the root cause step and calculates confidence scores, impact radius, and failure propagation routes.
+- **Evidence & Trust Analytics**: Generates an evidence score (observable vs. inferred), agent reliability rankings, and automated P0/P1 remediation steps.
+- **Deterministic Branch Replay**: Re-simulate span boundaries with controlled temperatures, seeds, or mocked tool outputs to verify fixes.
+- **Supabase & Telemetry Integration**: Store trace execution history persistently in Supabase with zero setup friction.
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ or 20+
+- npm or pnpm
+
+### Installation
 
 ```bash
-cp .env.example .env
-docker compose up -d postgres redis
-cd backend && npm install && npx prisma generate && npx prisma migrate dev --name init && npm run db:seed && npm run dev
-cd frontend && npm install && npm run dev
+# 1. Clone the repository
+git clone https://github.com/BHUVI2192/hetu.git
+
+# 2. Enter the repository directory
+cd hetu
+
+# 3. Install dependencies
+npm install
+
+# 4. Start the development server
+npm run dev
 ```
 
-Backend: http://localhost:4000 · Swagger: http://localhost:4000/api/docs
-Frontend: http://localhost:3000
-Demo: demo@404ai.dev / demo1234
+The application will be running live at **`http://localhost:3000`** (or `http://localhost:3001`).
 
-## The React Artifact (404ai-platform.jsx)
+---
 
-The complete Phase 1 + Phase 2 application as a single React component:
-- Landing page matching 404-ai.cofounder.company design
-- Smart trace converter (any format)
-- CIA algorithm for DES attribution
-- Evidence panel, propagation graph, decision report
-- Validation checklist, engineering summary, feedback loop
+## 🛠️ Project Architecture
 
-Open in Claude Artifacts or any React environment.
+```
+hetu/
+├── frontend/             # Next.js 14 App Router + Tailwind CSS + Lucide Icons
+│   ├── src/
+│   │   ├── pages/        # Core views: Home (Workspace Studio) & Reference Landing
+│   │   ├── app/          # Next.js app layout & global CSS tokens
+│   │   └── lib/          # Supabase client & tRPC configurations
+├── backend/              # NestJS backend API & Prisma database schemas
+└── hetu/                 # Core trace normalization engine & counterfactual algorithms
+```
 
-## Backend: 15 NestJS Modules
+---
 
-auth, workspace, project, upload, parser, timeline, graph, evidence, analysis, ai, report, chat, search, audit, notification
+## 📜 Available Scripts
 
-## Database: 26 Prisma Tables
+Run these scripts from the repository root:
 
-Full schema with UUIDs, soft deletes, indexes, relations.
+- `npm run dev`: Starts the Next.js frontend development server.
+- `npm run build`: Generates an optimized production build (`✓ Generating static pages`).
+- `npm run start`: Starts the Next.js production server.
+- `npm run dev:backend`: Starts the NestJS backend in watch mode.
 
-© 2026 404 AI
+---
+
+## 📄 License & Attribution
+
+© 2026 HETU.ai — Built for multi-agent system reliability.
