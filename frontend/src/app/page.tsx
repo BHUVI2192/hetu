@@ -2,11 +2,12 @@
 
 import dynamic from 'next/dynamic';
 
-const Home = dynamic(() => import('@/pages/Home'), {
+export const dynamic = 'force-dynamic';
+
+const Home = dynamic(() => import('@/ui-pages/Home'), {
   ssr: false,
 });
 
 export default function Page() {
   return <Home />;
 }
-
