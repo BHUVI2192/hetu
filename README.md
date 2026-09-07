@@ -1,23 +1,35 @@
 # 404 AI — Causal Intelligence Platform
 
-404 AI is a full-stack React, Express, tRPC, MySQL/TiDB workspace for ingesting AI-agent traces, normalizing framework events, exploring causal failures, capturing state snapshots, queuing safe replay/fork branches, and evaluating saved executions.
+## Quick Start
 
-## Current capabilities
+```bash
+cp .env.example .env
+docker compose up -d postgres redis
+cd backend && npm install && npx prisma generate && npx prisma migrate dev --name init && npm run db:seed && npm run dev
+cd frontend && npm install && npm run dev
+```
 
-The application includes a reference-aligned landing page, branded workspace, Manus OAuth, framework-aware normalization for OpenTelemetry, LangGraph, LangChain, CrewAI, AutoGen, and generic logs, tenant-scoped agent/execution/experiment/evaluation persistence, snapshot/replay/fork APIs, execution-derived evaluation scoring, and REST aliases under `/api/v1` for implemented resources.
+Backend: http://localhost:4000 · Swagger: http://localhost:4000/api/docs
+Frontend: http://localhost:3000
+Demo: demo@404ai.dev / demo1234
 
-## Local setup
+## The React Artifact (404ai-platform.jsx)
 
-Install Node.js 22 and pnpm, copy `.env.example` to `.env`, provide the existing Manus and MySQL/TiDB variables, then run `pnpm install`, `pnpm drizzle-kit generate`, and `pnpm dev`. Run `pnpm check`, `pnpm test`, and `pnpm build` before deployment.
+The complete Phase 1 + Phase 2 application as a single React component:
+- Landing page matching 404-ai.cofounder.company design
+- Smart trace converter (any format)
+- CIA algorithm for DES attribution
+- Evidence panel, propagation graph, decision report
+- Validation checklist, engineering summary, feedback loop
 
-## API surfaces
+Open in Claude Artifacts or any React environment.
 
-The canonical application API is tRPC under `/api/trpc`. Implemented REST aliases include trace normalization, agents, executions, snapshots, replays, forks, evaluations, and evaluation runs under `/api/v1`. Persistent routes require a valid Manus session.
+## Backend: 15 NestJS Modules
 
-## Safety
+auth, workspace, project, upload, parser, timeline, graph, evidence, analysis, ai, report, chat, search, audit, notification
 
-Normalization removes fields that look like chain-of-thought, API keys, tokens, or similar secrets. Replay records default to safe modes and currently persist requested replay intent; arbitrary user code is not executed by the web process.
+## Database: 26 Prisma Tables
 
-## Genuine limitations
+Full schema with UUIDs, soft deletes, indexes, relations.
 
-Worker-backed sandbox execution, live replay, full execution-event tables, project/workspace version graphs, model gateway/BYOK, CLI/SDK packages, deployment orchestration, monitoring, copilot, and knowledge services remain future implementation areas. See `IMPLEMENTATION_AUDIT.md` for the detailed matrix.
+© 2026 404 AI
