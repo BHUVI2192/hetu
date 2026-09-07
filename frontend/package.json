@@ -9,13 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
     "@tanstack/react-query": "^5.102.8",
     "@trpc/client": "^11.18.0",
     "@trpc/react-query": "^11.18.0",
     "@trpc/server": "^11.18.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.41.0",
-    "next": "^14.2.0",
+    "next": "^14.2.35",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "superjson": "^2.2.6",
