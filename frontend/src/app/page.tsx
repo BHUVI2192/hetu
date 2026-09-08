@@ -1,10 +1,10 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
-const Home = dynamic(() => import('@/ui-pages/Home'), {
+const Home = nextDynamic(() => import('@/ui-pages/Home'), {
   ssr: false,
 });
 

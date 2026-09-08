@@ -16,7 +16,8 @@ import { ChatModule } from './modules/chat/chat.module';
 import { SearchModule } from './modules/search/search.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { Phase2Module } from './modules/phase2/phase2.module';
 import { Controller, Get } from '@nestjs/common';
 @Controller('health') class HealthCtrl { @Get() check() { return { status: 'ok' }; } }
-@Module({ imports: [ConfigModule.forRoot({isGlobal:true}),PrismaModule,AuthModule,WorkspaceModule,ProjectModule,UploadModule,ParserModule,TimelineModule,GraphModule,EvidenceModule,AnalysisModule,AiModule,ReportModule,ChatModule,SearchModule,AuditModule,NotificationModule], controllers: [HealthCtrl] })
+@Module({ imports: [ConfigModule.forRoot({isGlobal:true}),PrismaModule,AuthModule,WorkspaceModule,ProjectModule,UploadModule,ParserModule,TimelineModule,GraphModule,EvidenceModule,AnalysisModule,AiModule,ReportModule,ChatModule,SearchModule,AuditModule,NotificationModule,Phase2Module], controllers: [HealthCtrl] })
 export class AppModule {}
