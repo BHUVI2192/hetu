@@ -3,8 +3,9 @@ import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
-import { createAgent, createEvaluation, createEvaluationRun, createExecution, createExperiment, createFork, createReplay, createSnapshot, getExecution, listAgents, listEvaluationRuns, listEvaluations, listExecutions, listExperiments, listReplays, listSnapshots, updateEvaluationScore } from "./db";
+import { createAgent, createAgentVersion, createAnalysisBundle, createDiff, createEvaluation, createEvaluationRun, createExecution, createExperiment, createFork, createReplay, createReplayResult, createSnapshot, getAnalysisBundle, getExecution, getReplay, listAgentVersions, listAgents, listDiffs, listEvaluationRuns, listEvaluations, listExecutions, listExperiments, listReplays, listSnapshots, updateEvaluationScore, updateReplayStatus } from "./db";
 import { normalizeTrace } from "./trace-normalizer";
+import { analyzeTrace, diffTraces } from "./analysis";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -27,6 +28,8 @@ export const appRouter = router({
   workspace: router({
     agents: protectedProcedure.query(({ ctx }) => listAgents(ctx.user.id)),
     createAgent: protectedProcedure.input(z.object({ name: z.string().min(2).max(160), framework: z.string().min(2).max(64), config: z.record(z.string(), z.unknown()).default({}) })).mutation(({ ctx, input }) => createAgent({ userId: ctx.user.id, name: input.name, framework: input.framework, config: JSON.stringify(input.config) })),
+    agentVersions: protectedProcedure.input(z.object({ agentId: z.number().int().positive() })).query(({ ctx, input }) => listAgentVersions(ctx.user.id, input.agentId)),
+    createAgentVersion: protectedProcedure.input(z.object({ agentId: z.number().int().positive(), version: z.string().min(1).max(32), status: z.enum(["draft", "staged", "production", "archived"]).optional(), config: z.record(z.string(), z.unknown()).default({}) })).mutation(({ ctx, input }) => createAgentVersion({ userId: ctx.user.id, agentId: input.agentId, version: input.version, status: input.status, config: JSON.stringify(input.config) })),
     executions: protectedProcedure.query(({ ctx }) => listExecutions(ctx.user.id)),
     ingest: protectedProcedure.input(z.object({ rawTrace: z.string().min(1).max(2_000_000), agentId: z.number().int().positive().optional() })).mutation(async ({ ctx, input }) => {
       const normalized = normalizeTrace(input.rawTrace);
@@ -42,6 +45,33 @@ export const appRouter = router({
     replays: protectedProcedure.input(z.object({ executionId: z.number().int().positive() })).query(({ ctx, input }) => listReplays(ctx.user.id, input.executionId)),
     createReplay: protectedProcedure.input(z.object({ executionId: z.number().int().positive(), snapshotId: z.number().int().positive().optional(), mode: z.enum(["sandbox", "mock_tools", "recorded_tools", "read_only"]), overrides: z.record(z.string(), z.unknown()).default({}) })).mutation(({ ctx, input }) => createReplay({ userId: ctx.user.id, executionId: input.executionId, snapshotId: input.snapshotId, mode: input.mode, overrides: JSON.stringify(input.overrides) })),
     createFork: protectedProcedure.input(z.object({ executionId: z.number().int().positive(), snapshotId: z.number().int().positive().optional(), name: z.string().min(2).max(160), changes: z.record(z.string(), z.unknown()).default({}) })).mutation(({ ctx, input }) => createFork({ userId: ctx.user.id, executionId: input.executionId, snapshotId: input.snapshotId, name: input.name, changes: JSON.stringify(input.changes) })),
+    analyzeExecution: protectedProcedure.input(z.object({ executionId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const execution = await getExecution(ctx.user.id, input.executionId);
+      if (!execution) throw new Error("Execution not found in this workspace");
+      const normalized = { framework: execution.framework as "opentelemetry" | "langgraph" | "langchain" | "crewai" | "autogen" | "generic", runId: execution.externalId, events: JSON.parse(execution.normalizedEvents), summary: JSON.parse(execution.metadata).summary ?? { agents: 0, tools: 0, errors: 0 }, warnings: [] };
+      const result = analyzeTrace(normalized);
+      const saved = await createAnalysisBundle({ userId: ctx.user.id, executionId: input.executionId, decisiveStep: result.decisiveStep, category: result.category, severity: result.severity, confidence: result.confidence, rootCause: result.rootCause, recommendation: result.recommendation, alternatives: JSON.stringify(result.alternatives), propagation: JSON.stringify(result.propagation) }, { evidence: result.evidence, propagation: result.propagation });
+      return { ...saved, evidence: result.evidence, propagation: result.propagation };
+    }),
+    analysis: protectedProcedure.input(z.object({ executionId: z.number().int().positive() })).query(({ ctx, input }) => getAnalysisBundle(ctx.user.id, input.executionId)),
+    createDiff: protectedProcedure.input(z.object({ leftExecutionId: z.number().int().positive(), rightExecutionId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const [left, right] = await Promise.all([getExecution(ctx.user.id, input.leftExecutionId), getExecution(ctx.user.id, input.rightExecutionId)]);
+      if (!left || !right) throw new Error("Both executions must belong to this workspace");
+      const diff = diffTraces(left.id, left, right.id, right);
+      return createDiff({ userId: ctx.user.id, leftExecutionId: left.id, rightExecutionId: right.id, summary: diff.summary, changes: JSON.stringify(diff.changes) });
+    }),
+    diffs: protectedProcedure.query(({ ctx }) => listDiffs(ctx.user.id)),
+    executeReplay: protectedProcedure.input(z.object({ replayId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const replay = await getReplay(ctx.user.id, input.replayId);
+      if (!replay) throw new Error("Replay not found in this workspace");
+      const source = await getExecution(ctx.user.id, replay.executionId);
+      if (!source) throw new Error("Source execution not found in this workspace");
+      await updateReplayStatus(ctx.user.id, replay.id, "running", "Safe replay is restoring the normalized event stream.");
+      const resultExecution = await createExecution({ userId: ctx.user.id, agentId: source.agentId ?? undefined, externalId: `replay_${replay.id}_${Date.now()}`, framework: source.framework, eventCount: source.eventCount, rootCause: source.rootCause ?? undefined, normalizedEvents: source.normalizedEvents, metadata: JSON.stringify({ replayOf: source.id, replayId: replay.id, mode: replay.mode, overrides: JSON.parse(replay.overrides), safety: "recorded normalized replay; no external tools invoked" }) });
+      const result = await createReplayResult({ userId: ctx.user.id, replayId: replay.id, resultExecutionId: resultExecution?.id, status: "completed", summary: `Created replay execution from source ${source.id} using ${replay.mode.replaceAll("_", " ")} mode.`, divergence: JSON.stringify({ eventCount: 0, note: "No external tool calls were invoked by the safe replay service." }) });
+      await updateReplayStatus(ctx.user.id, replay.id, "completed", JSON.stringify(result));
+      return { replay, resultExecution, result };
+    }),
     evaluationRuns: protectedProcedure.input(z.object({ evaluationId: z.number().int().positive() })).query(({ ctx, input }) => listEvaluationRuns(ctx.user.id, input.evaluationId)),
     runEvaluation: protectedProcedure.input(z.object({ evaluationId: z.number().int().positive(), executionId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const execution = await getExecution(ctx.user.id, input.executionId);

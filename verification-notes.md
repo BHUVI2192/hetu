@@ -46,3 +46,7 @@ The live workspace opens the Execution Explorer with clear copy describing state
 ## Final workflow verification
 
 Live preview confirms the updated Execution Explorer and Evaluation Lab navigation render cleanly after the final backend scoring changes. Unauthenticated sessions are gated before persistent data access; authenticated sessions can use the stored workflows.
+
+## Hetu hardening verification
+
+After restoring the project, the live landing page and workspace rendered successfully. The Execution Explorer now opens with the existing protected workspace gate; authenticated users will see the added Run RCA, Snapshot, Replay, Fork, and Compare controls on selected executions.

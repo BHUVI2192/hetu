@@ -147,3 +147,85 @@ export const evaluationRuns = mysqlTable("evaluationRuns", {
 
 export type EvaluationRun = typeof evaluationRuns.$inferSelect;
 export type InsertEvaluationRun = typeof evaluationRuns.$inferInsert;
+
+export const agentVersions = mysqlTable("agentVersions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  agentId: int("agentId").notNull(),
+  version: varchar("version", { length: 32 }).notNull(),
+  status: mysqlEnum("status", ["draft", "staged", "production", "archived"]).default("draft").notNull(),
+  config: text("config").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AgentVersion = typeof agentVersions.$inferSelect;
+
+export const analyses = mysqlTable("analyses", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  executionId: int("executionId").notNull(),
+  decisiveStep: varchar("decisiveStep", { length: 160 }),
+  category: varchar("category", { length: 64 }).notNull(),
+  severity: mysqlEnum("severity", ["low", "medium", "high", "critical"]).notNull(),
+  confidence: int("confidence").notNull(),
+  rootCause: text("rootCause").notNull(),
+  recommendation: text("recommendation").notNull(),
+  alternatives: text("alternatives").notNull(),
+  propagation: text("propagation").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Analysis = typeof analyses.$inferSelect;
+
+export const evidence = mysqlTable("evidence", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  analysisId: int("analysisId").notNull(),
+  executionId: int("executionId").notNull(),
+  eventId: varchar("eventId", { length: 120 }).notNull(),
+  kind: mysqlEnum("kind", ["observable", "inferred"]).notNull(),
+  claim: text("claim").notNull(),
+  source: text("source").notNull(),
+  score: int("score").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Evidence = typeof evidence.$inferSelect;
+
+export const propagation = mysqlTable("propagation", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  analysisId: int("analysisId").notNull(),
+  fromEventId: varchar("fromEventId", { length: 120 }).notNull(),
+  toEventId: varchar("toEventId", { length: 120 }).notNull(),
+  relation: varchar("relation", { length: 32 }).notNull(),
+  impact: mysqlEnum("impact", ["low", "medium", "high"]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Propagation = typeof propagation.$inferSelect;
+
+export const replayResults = mysqlTable("replayResults", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  replayId: int("replayId").notNull(),
+  resultExecutionId: int("resultExecutionId"),
+  status: mysqlEnum("status", ["completed", "failed"]).notNull(),
+  summary: text("summary").notNull(),
+  divergence: text("divergence"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ReplayResult = typeof replayResults.$inferSelect;
+
+export const diffs = mysqlTable("diffs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  leftExecutionId: int("leftExecutionId").notNull(),
+  rightExecutionId: int("rightExecutionId").notNull(),
+  summary: text("summary").notNull(),
+  changes: text("changes").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Diff = typeof diffs.$inferSelect;
